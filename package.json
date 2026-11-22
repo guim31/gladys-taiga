@@ -1,8 +1,8 @@
 {
-  "name": "gladys-integration-template-js",
+  "name": "gladys-taiga",
   "version": "1.0.0",
   "private": true,
-  "description": "Official starter template to build an external integration for Gladys Assistant with the JavaScript SDK.",
+  "description": "Taiga projects in Gladys Assistant: open user stories, tasks and issues, overdue items, sprint progress, and issues created from scenes.",
   "type": "module",
   "main": "index.js",
   "scripts": {

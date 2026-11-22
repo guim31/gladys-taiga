@@ -1,0 +1,4 @@
+{
+  "detail": "No active account found with the given credentials",
+  "code": "invalid_credentials"
+}

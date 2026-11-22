@@ -30,6 +30,19 @@ Gladys before reporting a problem.
 
 In scope: the code of this repository and the Docker image it publishes.
 
+What the integration handles:
+
+- the **password** of a Taiga user, stored by Gladys in the integration's
+  configuration and sent only to the configured Taiga address (`POST
+/api/v1/auth`);
+- the **access and refresh tokens** Taiga gives back, kept in memory only,
+  never written to disk nor logged;
+- `/data/taiga-state.json`: the time of the last reading and the last issue
+  id seen in each project, nothing else;
+- network: HTTP(S) requests to the configured Taiga address only (or
+  `api.taiga.io` for taiga.io). "Accept self-signed certificates" turns off
+  certificate checking for that address only.
+
 Out of scope: Gladys Assistant itself (see its
 [security policy](https://github.com/GladysAssistant/Gladys/security/policy)),
-and the third-party services and devices the integration talks to.
+and Taiga and the other third-party services the integration talks to.
