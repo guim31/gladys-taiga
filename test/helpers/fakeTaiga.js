@@ -36,7 +36,8 @@ const json = (status, value) => ({
 const KIND_PATHS = { userstories: 'userstories', tasks: 'tasks', issues: 'issues' };
 
 export class FakeTaiga {
-  constructor() {
+  constructor({ now = () => Date.now() } = {}) {
+    this.now = now;
     this.auth = fixture('real-auth');
     this.projectList = fixture('real-projects');
     this.data = {};
@@ -88,6 +89,7 @@ export class FakeTaiga {
       ref,
       is_closed: false,
       due_date: fields.due_date ?? null,
+      created_date: new Date(this.now()).toISOString(),
       status_extra_info: { name: 'New', color: '#70728F', is_closed: false },
     };
     this.data[kind].push(item);

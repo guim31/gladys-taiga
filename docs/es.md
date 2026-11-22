@@ -106,7 +106,7 @@ el proyecto, el estado, el vencimiento y el enlace al elemento en Taiga.
 
 Una nueva petición se ve en la lectura siguiente: dentro del intervalo de
 actualización. Un proyecto recién añadido a los seguidos no trae ninguna
-«nueva petición», y una petición creada y cerrada entre dos lecturas no se ve.
+«nueva petición», y una petición creada y cerrada entre dos lecturas no se ve, y una petición cerrada y reabierta no es nueva. Tras una parada de la integración de más de una hora, solo se anuncian las peticiones de la última hora.
 Un vencimiento fijado en un día ya pasado no dispara nada. Un reinicio no
 dispara nada dos veces; un elemento atrasado menos de una hora antes del
 reinicio dispara en ese momento.
@@ -150,6 +150,7 @@ campos aceptan variables de escena: `{{triggerEvent.data.item}}`.
   **Proyectos seguidos** que no corresponde a ningún proyecto se ignora, y
   **Probar la conexión** lo indica. Más allá de 20 proyectos, enumere los que
   desea seguir.
+- Tras una contraseña rechazada, Taiga solo se reintenta cada 15 minutos, para no bloquear la cuenta: corrija la configuración para reintentar de inmediato.
 - Registros: `LOG_LEVEL=debug` en el contenedor muestra cada lectura.
 
 ## Límites
@@ -157,7 +158,7 @@ campos aceptan variables de escena: `{{triggerEvent.data.item}}`.
 - Taiga se lee cada 1 a 10 minutos (y a medianoche): un cambio en Taiga llega
   a Gladys en ese plazo. No se usan los webhooks de Taiga.
 - En cada lectura: la lista de proyectos y, para cada proyecto seguido, sus
-  historias, tareas, peticiones y sprints abiertos (cinco solicitudes). En
+  historias, tareas, peticiones y sprints abiertos (cuatro solicitudes, más la lista de proyectos). En
   taiga.io, mantenga un intervalo largo: el servicio limita el número de
   solicitudes.
 - La sesión se guarda en memoria y se renueva con el token de refresco de

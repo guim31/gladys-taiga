@@ -100,7 +100,7 @@ the project, the status, the due date, and the link to the item in Taiga.
 
 A new issue is seen at the next reading: within the refresh interval. A
 project just added to the followed ones brings no "new issue", and an issue
-created and closed between two readings is not seen. A due date set to a day
+created and closed between two readings is not seen, and a closed issue reopened is not new. After the integration was stopped for more than an hour, only the issues of the last hour are announced. A due date set to a day
 already past fires nothing. A restart does not fire anything twice; an item
 that became overdue less than an hour before the integration starts again
 fires then.
@@ -141,6 +141,7 @@ Taiga not answering) is shown as an error. The fields accept scene variables:
   typed in **Followed projects** that matches no project is ignored, and
   **Test the connection** lists it. Beyond 20 projects, list the ones to
   follow.
+- After a refused password, Taiga is tried again every 15 minutes at most, so as not to lock the account: correct the configuration to retry at once.
 - Logs: `LOG_LEVEL=debug` on the container shows every reading.
 
 ## Limits
@@ -148,7 +149,7 @@ Taiga not answering) is shown as an error. The fields accept scene variables:
 - Taiga is read every 1 to 10 minutes (and at midnight): a change in Taiga
   shows up in Gladys within that delay. Taiga's webhooks are not used.
 - At each reading: the list of projects, then for each followed project its
-  open user stories, tasks, issues and sprints (five requests). On taiga.io,
+  open user stories, tasks, issues and sprints (four requests, plus the list of projects). On taiga.io,
   keep a long interval: the service limits the number of requests.
 - The login is kept in memory and renewed with Taiga's refresh token when it
   expires (after 24 hours on a default server); the password is only sent

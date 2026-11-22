@@ -140,11 +140,12 @@ export const ACTION_TEXT = {
     es: 'Indique el título del nuevo elemento.',
   },
   noProject: {
-    en: 'This Taiga user is a member of no project.',
-    fr: "Cet utilisateur de Taiga n'est membre d'aucun projet.",
-    de: 'Dieser Taiga-Benutzer ist Mitglied keines Projekts.',
-    es: 'Este usuario de Taiga no es miembro de ningún proyecto.',
+    en: 'No followed project: give the name or slug of the project.',
+    fr: 'Aucun projet suivi : indiquez le nom ou le slug du projet.',
+    de: 'Kein verfolgtes Projekt: Gib den Namen oder Slug des Projekts an.',
+    es: 'Ningún proyecto seguido: indique el nombre o el slug del proyecto.',
   },
+
   projectNotFound: {
     en: 'No project of this user has this name, slug or id in Taiga.',
     fr: 'Aucun projet de cet utilisateur ne porte ce nom, ce slug ou cet identifiant dans Taiga.',

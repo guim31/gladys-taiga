@@ -68,6 +68,9 @@ export function parseItems(raw, kind, projectId) {
       name: text(item.subject) || `#${item.ref ?? item.id}`,
       projectId,
       due: dayOf(item.due_date),
+      created: Number.isFinite(Date.parse(item.created_date))
+        ? Date.parse(item.created_date)
+        : null,
       status: text(item.status_extra_info?.name),
     }))
     .sort((a, b) => (a.due ?? '9').localeCompare(b.due ?? '9') || a.id - b.id);

@@ -107,8 +107,7 @@ projet, le statut, l'échéance et le lien vers l'élément dans Taiga.
 
 Un nouveau ticket est vu à la lecture suivante : dans l'intervalle de
 rafraîchissement. Un projet tout juste ajouté aux projets suivis n'amène aucun
-« nouveau ticket », et un ticket créé puis fermé entre deux lectures n'est pas
-vu. Une échéance fixée à un jour déjà passé ne déclenche rien. Un redémarrage
+« nouveau ticket », et un ticket créé puis fermé entre deux lectures n'est pas vu, et un ticket fermé puis rouvert n'est pas nouveau. Après un arrêt de l'intégration de plus d'une heure, seuls les tickets de la dernière heure sont annoncés. Une échéance fixée à un jour déjà passé ne déclenche rien. Un redémarrage
 ne déclenche rien deux fois ; un élément passé en retard moins d'une heure
 avant le retour de l'intégration déclenche à ce moment-là.
 
@@ -152,6 +151,7 @@ acceptent les variables de scène : `{{triggerEvent.data.item}}`.
   dans **Projets suivis** qui ne correspond à aucun projet est ignoré, et
   **Tester la connexion** le cite. Au-delà de 20 projets, listez ceux à
   suivre.
+- Après un mot de passe refusé, Taiga n'est retenté que toutes les 15 minutes, pour ne pas bloquer le compte : corrigez la configuration pour réessayer tout de suite.
 - Journaux : `LOG_LEVEL=debug` sur le conteneur montre chaque lecture.
 
 ## Limites
@@ -160,7 +160,7 @@ acceptent les variables de scène : `{{triggerEvent.data.item}}`.
   Taiga arrive dans Gladys dans ce délai. Les webhooks de Taiga ne sont pas
   utilisés.
 - À chaque lecture : la liste des projets, puis pour chaque projet suivi ses
-  user stories, tâches, tickets et sprints ouverts (cinq requêtes). Sur
+  user stories, tâches, tickets et sprints ouverts (quatre requêtes, plus la liste des projets). Sur
   taiga.io, gardez un intervalle long : le service limite le nombre de
   requêtes.
 - La connexion est gardée en mémoire et renouvelée par le jeton de

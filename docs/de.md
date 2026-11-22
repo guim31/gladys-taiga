@@ -108,7 +108,7 @@ Projekt, Status, Fälligkeit und der Link zum Element in Taiga.
 Ein neues Ticket wird beim nächsten Lesen gesehen: innerhalb des
 Aktualisierungsintervalls. Ein gerade zu den verfolgten hinzugefügtes Projekt
 bringt kein „neues Ticket“, und ein zwischen zwei Lesevorgängen erstelltes und
-geschlossenes Ticket wird nicht gesehen. Eine Fälligkeit auf einen schon
+geschlossenes Ticket wird nicht gesehen, und ein wieder geöffnetes Ticket ist nicht neu. War die Integration länger als eine Stunde gestoppt, werden nur die Tickets der letzten Stunde gemeldet. Eine Fälligkeit auf einen schon
 vergangenen Tag löst nichts aus. Ein Neustart löst nichts doppelt aus; ein
 Element, das weniger als eine Stunde vor dem Neustart überfällig wurde, löst
 dann aus.
@@ -151,6 +151,7 @@ Szenenvariablen: `{{triggerEvent.data.item}}`.
   Projekte** eingegebener Name ohne passendes Projekt wird ignoriert, und
   **Verbindung testen** nennt ihn. Über 20 Projekte: Liste die zu
   verfolgenden auf.
+- Nach einem abgelehnten Passwort wird Taiga höchstens alle 15 Minuten erneut versucht, um das Konto nicht zu sperren: Korrigiere die Konfiguration, um sofort neu zu versuchen.
 - Protokolle: `LOG_LEVEL=debug` am Container zeigt jeden Lesevorgang.
 
 ## Grenzen
@@ -159,7 +160,7 @@ Szenenvariablen: `{{triggerEvent.data.item}}`.
   Änderung in Taiga kommt innerhalb dieser Zeit in Gladys an. Die Webhooks
   von Taiga werden nicht genutzt.
 - Bei jedem Lesen: die Projektliste, dann für jedes verfolgte Projekt seine
-  offenen User Stories, Aufgaben, Tickets und Sprints (fünf Anfragen). Bei
+  offenen User Stories, Aufgaben, Tickets und Sprints (vier Anfragen, plus die Projektliste). Bei
   taiga.io ein langes Intervall wählen: Der Dienst begrenzt die Zahl der
   Anfragen.
 - Die Anmeldung bleibt im Speicher und wird beim Ablauf (nach 24 Stunden auf

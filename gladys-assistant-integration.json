@@ -157,10 +157,10 @@
         "es": "Intervalo de actualización"
       },
       "description": {
-        "en": "How often Taiga is read (five requests per followed project). Midnight, when items become overdue, is always followed on time.",
-        "fr": "Fréquence de lecture de Taiga (cinq requêtes par projet suivi). Minuit, quand des éléments passent en retard, est toujours suivi à l'heure.",
-        "de": "Wie oft Taiga gelesen wird (fünf Anfragen pro verfolgtem Projekt). Mitternacht, wenn Elemente überfällig werden, wird immer pünktlich verfolgt.",
-        "es": "Frecuencia de lectura de Taiga (cinco solicitudes por proyecto seguido). La medianoche, cuando los elementos se atrasan, se sigue siempre a tiempo."
+        "en": "How often Taiga is read (four requests per followed project, plus the project list). Midnight, when items become overdue, is always followed on time.",
+        "fr": "Fréquence de lecture de Taiga (quatre requêtes par projet suivi, plus la liste des projets). Minuit, quand des éléments passent en retard, est toujours suivi à l'heure.",
+        "de": "Wie oft Taiga gelesen wird (vier Anfragen pro verfolgtem Projekt plus die Projektliste). Mitternacht, wenn Elemente überfällig werden, wird immer pünktlich verfolgt.",
+        "es": "Frecuencia de lectura de Taiga (cuatro solicitudes por proyecto seguido, más la lista de proyectos). La medianoche, cuando los elementos se atrasan, se sigue siempre a tiempo."
       },
       "required": false,
       "default": "300",

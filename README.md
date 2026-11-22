@@ -48,7 +48,7 @@ are published with `should_poll: false`, and only the values that change are
 sent to Gladys. The login (`POST /auth`) is kept in memory and renewed with the
 refresh token when the access token expires. `/data/taiga-state.json` keeps
 the time of the last reading and the last issue id seen in each project, so a
-restart neither repeats nor loses a scene event.
+restart neither repeats nor loses a scene event (within the hour).
 
 ## Checked on a real Taiga, and what was not
 

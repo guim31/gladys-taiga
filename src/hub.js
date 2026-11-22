@@ -65,9 +65,15 @@ export const HUB_TIMINGS = {
   heartbeatMs: 12 * 60 * 60_000,
   // An event this late (Taiga or the integration was down) is dropped.
   maxLateMs: 60 * 60_000,
+  // Tolerated gap between the clocks of Taiga and of the container.
+  clockSkewMs: 15 * 60_000,
+  // A refused login is tried again this late at the soonest: a wrong password
+  // sent every 30 s could lock the account or trip a reverse proxy's ban.
+  authRetryMs: 15 * 60_000,
 };
 
-// At most this many projects are read (4 requests each per reading).
+// At most this many projects are read (4 requests each per reading, plus the
+// list of projects).
 export const MAX_PROJECTS = 20;
 // The reading after a creation is awaited at most this long: the scene action
 // answers within its 20 s.
@@ -235,6 +241,12 @@ export class TaigaHub {
   /** The interval, shortened to the next local midnight. */
   nextDelay(readAt = this.now()) {
     if (this.error) {
+      if ([ERROR_KINDS.AUTH, ERROR_KINDS.FORBIDDEN].includes(this.error.kind)) {
+        return Math.max(this.config.pollIntervalMs, this.timings.authRetryMs);
+      }
+      if (this.error.kind === ERROR_KINDS.RATE_LIMIT) {
+        return 2 * this.config.pollIntervalMs;
+      }
       return Math.min(this.config.pollIntervalMs, this.timings.retryMs);
     }
     const now = this.now();
@@ -590,35 +602,49 @@ export class TaigaHub {
    *     ago): it became overdue at local midnight. A due date set by hand to
    *     a day already past fires nothing;
    *   - an open issue whose id is above the highest one known for its
-   *     project (Taiga ids only grow): a new issue. A project just followed
+   *     project (Taiga ids only grow), created since the previous reading
+   *     (at most `maxLateMs` ago, give or take `clockSkewMs` between the two
+   *     clocks): a new issue. A closed issue reopened later is old, not new.
+   *     A project just followed, or whose Issues module was just turned on,
    *     brings no event.
    */
   async fireEvents(now) {
     const scope = this.config.server.api;
     const highest = (project) =>
       Math.max(0, ...project.items.filter((i) => i.kind === KINDS.ISSUE).map((i) => i.id));
+    // A baseline only for the followed projects that read their issues: a
+    // project followed again, or whose Issues module comes back, starts over.
+    const baselines = (previous) =>
+      Object.fromEntries(
+        this.followed
+          .filter((project) => project.issues)
+          .map((project) => [
+            project.id,
+            Number.isSafeInteger(previous[project.id]) ? previous[project.id] : highest(project),
+          ]),
+      );
     if (this.saved.scope !== scope || this.saved.readAt === 0) {
       // First reading of this instance: what already passed is not news.
-      this.saved = {
-        scope,
-        readAt: now,
-        lastIssue: Object.fromEntries(this.followed.map((p) => [p.id, highest(p)])),
-        sent: [],
-      };
+      this.saved = { scope, readAt: now, lastIssue: baselines({}), sent: [] };
       this.store.save(this.saved);
       return;
     }
-    const lastIssue = { ...this.saved.lastIssue };
+    const lastIssue = baselines(this.saved.lastIssue);
+    const createdFrom =
+      Math.max(this.saved.readAt, now - this.timings.maxLateMs) - this.timings.clockSkewMs;
     for (const project of this.followed) {
-      const known = lastIssue[project.id];
-      if (!Number.isSafeInteger(known)) {
-        lastIssue[project.id] = highest(project);
+      if (!project.issues || !Number.isSafeInteger(this.saved.lastIssue[project.id])) {
         continue;
       }
       const fresh = project.items
-        .filter((item) => item.kind === KINDS.ISSUE && item.id > known)
+        .filter((item) => item.kind === KINDS.ISSUE && item.id > lastIssue[project.id])
         .sort((a, b) => a.id - b.id);
       for (const item of fresh) {
+        if (item.created !== null && item.created < createdFrom) {
+          // Reopened, or created while the integration was down for long.
+          lastIssue[project.id] = item.id;
+          continue;
+        }
         // Gladys refused (restarting?): this one and the next are tried again
         // at the next reading.
         if (!(await this.fire(TRIGGERS.ISSUE_ADDED, this.eventData(item)))) {
@@ -737,20 +763,18 @@ export class TaigaHub {
 
   /** A project by id, slug or name among every project of the user; empty: the first followed. */
   async findProject(query) {
-    let projects;
-    try {
-      projects = parseProjects(await this.requireClient().projects());
-    } catch (err) {
-      throw this.explain(err);
-    }
+    this.requireClient();
     if (String(query ?? '').trim() === '') {
-      const first =
-        projects.find((project) => this.followed.some((item) => item.id === project.id)) ??
-        projects[0];
-      if (!first) {
+      if (this.followed.length === 0) {
         throw this.fail('noProject');
       }
-      return first;
+      return this.followed[0];
+    }
+    let projects;
+    try {
+      projects = parseProjects(await this.client.projects());
+    } catch (err) {
+      throw this.explain(err);
     }
     const { item, reason } = findProject(projects, query);
     if (!item) {

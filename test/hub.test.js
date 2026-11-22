@@ -257,6 +257,49 @@ test('a new issue fires "new issue"; a newly followed project does not', async (
   assert.equal(w.fake.sceneEvents.length, 2);
 });
 
+test('no burst of "new issue": module turned on, project followed again, issue reopened', async (t) => {
+  const clock = createClock();
+  const server = new FakeTaiga({ now: clock.now });
+  server.projectList[1].is_issues_activated = false;
+  const w = await world(t, { clock, server });
+  // The Issues module of "Site web" is turned on: its old issues are not new.
+  server.projectList[1].is_issues_activated = true;
+  clock.advance(5 * 60_000);
+  await w.hub.poll();
+  assert.deepEqual(w.fake.sceneEvents, []);
+  // "Site web" is left, gets issues for three days, then is followed again.
+  await w.fake.configUpdated({ ...BASE_CONFIG, projects: 'maison' });
+  for (let i = 0; i < 3; i += 1) {
+    server.item('issues', { project: SITE, subject: `Ancien ${i}` });
+  }
+  clock.advance(3 * 24 * HOUR);
+  await w.hub.poll();
+  await w.fake.configUpdated(BASE_CONFIG);
+  assert.deepEqual(w.fake.sceneEvents, []);
+  // A closed issue, older than the last one seen, is reopened: not new.
+  const old = server.item('issues', { project: MAISON, subject: 'Vieux ticket' });
+  old.is_closed = true;
+  old.created_date = new Date(clock.now() - 10 * 24 * HOUR).toISOString();
+  clock.advance(5 * 60_000);
+  await w.hub.poll();
+  server.item('issues', { project: MAISON, subject: 'Vraiment nouveau' });
+  old.is_closed = false;
+  clock.advance(5 * 60_000);
+  await w.hub.poll();
+  assert.deepEqual(
+    w.fake.sceneEvents.map((event) => event.data.item),
+    ['Vraiment nouveau'],
+  );
+});
+
+test('a refused password is not tried again every 30 seconds', async (t) => {
+  const w = await world(t, { config: { ...BASE_CONFIG, password: 'wrong' } });
+  assert.ok(w.hub.nextDelay() >= 15 * 60_000);
+  w.server.online = false;
+  await w.hub.poll();
+  assert.equal(w.hub.nextDelay(), 30_000, 'an outage is retried soon');
+});
+
 // --- Scene actions ---------------------------------------------------------------
 
 test('create_issue creates an issue and returns its number and link', async (t) => {
@@ -317,6 +360,13 @@ test('an issue in a project whose Issues module is off is refused before Taiga',
   assert.equal(ack.success, false);
   assert.match(ack.error.fr, /module Tickets/);
   assert.equal(w.fake.lastState(projectId(w.gladys, SITE).feature('open_issues')), 0);
+});
+
+test('an empty project without any followed project is an error', async (t) => {
+  const w = await world(t, { config: { ...BASE_CONFIG, projects: 'Atelier' } });
+  const ack = await w.fake.sceneAction('create_issue', { title: 'x' });
+  assert.equal(ack.success, false);
+  assert.match(ack.error.fr, /Aucun projet suivi/);
 });
 
 test('an action without configuration is an error', async (t) => {

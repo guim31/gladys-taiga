@@ -59,7 +59,7 @@ export async function createWorld({
   timings = {},
   timers = false,
 } = {}) {
-  const taiga = server ?? new FakeTaiga();
+  const taiga = server ?? new FakeTaiga({ now: clock.now });
   const network = createNetwork({ [URL_1]: taiga });
   const gladys = createFakeGladys({ config, devices });
   const app = registerHandlers(gladys, {
