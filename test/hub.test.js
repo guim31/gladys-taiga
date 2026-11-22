@@ -292,6 +292,28 @@ test('no burst of "new issue": module turned on, project followed again, issue r
   );
 });
 
+test('a new issue refused by Gladys several times is still sent', async (t) => {
+  const w = await world(t, { config: { ...BASE_CONFIG, poll_interval: '600' } });
+  const publish = w.gladys.publishSceneEvent.bind(w.gladys);
+  let refusals = 3;
+  t.mock.method(w.gladys, 'publishSceneEvent', async (...args) => {
+    if (refusals > 0) {
+      refusals -= 1;
+      throw new Error('Gladys is restarting');
+    }
+    return publish(...args);
+  });
+  w.server.item('issues', { project: MAISON, subject: 'Chaudière en panne' });
+  for (let i = 0; i < 4; i += 1) {
+    w.clock.advance(10 * 60_000);
+    await w.hub.poll();
+  }
+  assert.deepEqual(
+    w.fake.sceneEvents.map((event) => event.data.item),
+    ['Chaudière en panne'],
+  );
+});
+
 test('a refused password is not tried again every 30 seconds', async (t) => {
   const w = await world(t, { config: { ...BASE_CONFIG, password: 'wrong' } });
   assert.ok(w.hub.nextDelay() >= 15 * 60_000);

@@ -251,8 +251,8 @@ code de ce dépôt. Compléter ce fichier quand un nouveau piège est découvert
 - Création : `POST /issues` ou `/userstories` `{ project, subject, description }` → 201 avec `id` et `ref` ;
   sujet absent : 400 `{ subject: [...] }`. Une user story se crée même module Scrum désactivé (Kanban).
 - Les `id` des tickets ne font que croître : « nouveau ticket » = id au-delà du plus grand déjà vu dans le projet
-  (`/data/taiga-state.json`) **et** `created_date` depuis la lecture précédente (une heure au plus, 15 min de
-  décalage d'horloge toléré) : sans ce second filtre, un ticket fermé puis rouvert, ou le module Tickets réactivé,
+  (`/data/taiga-state.json`) **et** `created_date` de moins d'une heure (15 min de décalage d'horloge toléré ; pas « depuis la lecture
+  précédente », qui perdait un événement refusé plusieurs fois par Gladys) : sans ce second filtre, un ticket fermé puis rouvert, ou le module Tickets réactivé,
   envoyait une rafale de faux « nouveaux tickets » (relecture du 22/11). La base n'est gardée que pour les projets
   suivis dont les tickets sont lus.
 - Mot de passe refusé : nouvel essai au plus toutes les 15 min (pas 30 s), pour ne pas bloquer le compte.

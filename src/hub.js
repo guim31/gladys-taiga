@@ -602,9 +602,8 @@ export class TaigaHub {
    *     ago): it became overdue at local midnight. A due date set by hand to
    *     a day already past fires nothing;
    *   - an open issue whose id is above the highest one known for its
-   *     project (Taiga ids only grow), created since the previous reading
-   *     (at most `maxLateMs` ago, give or take `clockSkewMs` between the two
-   *     clocks): a new issue. A closed issue reopened later is old, not new.
+   *     project (Taiga ids only grow), created at most `maxLateMs` ago (give
+   *     or take `clockSkewMs` between the two clocks): a new issue. A closed issue reopened later is old, not new.
    *     A project just followed, or whose Issues module was just turned on,
    *     brings no event.
    */
@@ -630,8 +629,9 @@ export class TaigaHub {
       return;
     }
     const lastIssue = baselines(this.saved.lastIssue);
-    const createdFrom =
-      Math.max(this.saved.readAt, now - this.timings.maxLateMs) - this.timings.clockSkewMs;
+    // Not the previous reading: an issue whose event Gladys refused stays new
+    // while it is retried (the id baseline already prevents a repeat).
+    const createdFrom = now - this.timings.maxLateMs - this.timings.clockSkewMs;
     for (const project of this.followed) {
       if (!project.issues || !Number.isSafeInteger(this.saved.lastIssue[project.id])) {
         continue;
@@ -642,6 +642,7 @@ export class TaigaHub {
       for (const item of fresh) {
         if (item.created !== null && item.created < createdFrom) {
           // Reopened, or created while the integration was down for long.
+          logger.debug(`Issue #${item.ref} of project ${project.id} is not recent: no event`);
           lastIssue[project.id] = item.id;
           continue;
         }
