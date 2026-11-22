@@ -603,7 +603,7 @@ export class TaigaHub {
    *     a day already past fires nothing;
    *   - an open issue whose id is above the highest one known for its
    *     project (Taiga ids only grow), created at most `maxLateMs` ago (give
-   *     or take `clockSkewMs` between the two clocks): a new issue. A closed issue reopened later is old, not new.
+   *     or take `clockSkewMs` between the two clocks): a new issue. A reopened issue more than an hour old is not new.
    *     A project just followed, or whose Issues module was just turned on,
    *     brings no event.
    */

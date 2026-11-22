@@ -100,7 +100,7 @@ the project, the status, the due date, and the link to the item in Taiga.
 
 A new issue is seen at the next reading: within the refresh interval. A
 project just added to the followed ones brings no "new issue", and an issue
-created and closed between two readings is not seen, and a closed issue reopened is not new. After the integration was stopped for more than an hour, only the issues of the last hour are announced. A due date set to a day
+created and closed between two readings is not seen, and a reopened issue more than an hour old is not new. After the integration was stopped for more than an hour, only the issues of the last hour are announced. A due date set to a day
 already past fires nothing. A restart does not fire anything twice; an item
 that became overdue less than an hour before the integration starts again
 fires then.

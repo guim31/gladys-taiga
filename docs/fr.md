@@ -107,7 +107,7 @@ projet, le statut, l'échéance et le lien vers l'élément dans Taiga.
 
 Un nouveau ticket est vu à la lecture suivante : dans l'intervalle de
 rafraîchissement. Un projet tout juste ajouté aux projets suivis n'amène aucun
-« nouveau ticket », et un ticket créé puis fermé entre deux lectures n'est pas vu, et un ticket fermé puis rouvert n'est pas nouveau. Après un arrêt de l'intégration de plus d'une heure, seuls les tickets de la dernière heure sont annoncés. Une échéance fixée à un jour déjà passé ne déclenche rien. Un redémarrage
+« nouveau ticket », et un ticket créé puis fermé entre deux lectures n'est pas vu, et un ticket rouvert vieux de plus d'une heure n'est pas nouveau. Après un arrêt de l'intégration de plus d'une heure, seuls les tickets de la dernière heure sont annoncés. Une échéance fixée à un jour déjà passé ne déclenche rien. Un redémarrage
 ne déclenche rien deux fois ; un élément passé en retard moins d'une heure
 avant le retour de l'intégration déclenche à ce moment-là.
 

@@ -108,7 +108,7 @@ Projekt, Status, Fälligkeit und der Link zum Element in Taiga.
 Ein neues Ticket wird beim nächsten Lesen gesehen: innerhalb des
 Aktualisierungsintervalls. Ein gerade zu den verfolgten hinzugefügtes Projekt
 bringt kein „neues Ticket“, und ein zwischen zwei Lesevorgängen erstelltes und
-geschlossenes Ticket wird nicht gesehen, und ein wieder geöffnetes Ticket ist nicht neu. War die Integration länger als eine Stunde gestoppt, werden nur die Tickets der letzten Stunde gemeldet. Eine Fälligkeit auf einen schon
+geschlossenes Ticket wird nicht gesehen, und ein wieder geöffnetes Ticket, das älter als eine Stunde ist, ist nicht neu. War die Integration länger als eine Stunde gestoppt, werden nur die Tickets der letzten Stunde gemeldet. Eine Fälligkeit auf einen schon
 vergangenen Tag löst nichts aus. Ein Neustart löst nichts doppelt aus; ein
 Element, das weniger als eine Stunde vor dem Neustart überfällig wurde, löst
 dann aus.

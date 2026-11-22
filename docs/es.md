@@ -106,7 +106,7 @@ el proyecto, el estado, el vencimiento y el enlace al elemento en Taiga.
 
 Una nueva petición se ve en la lectura siguiente: dentro del intervalo de
 actualización. Un proyecto recién añadido a los seguidos no trae ninguna
-«nueva petición», y una petición creada y cerrada entre dos lecturas no se ve, y una petición cerrada y reabierta no es nueva. Tras una parada de la integración de más de una hora, solo se anuncian las peticiones de la última hora.
+«nueva petición», y una petición creada y cerrada entre dos lecturas no se ve, y una petición reabierta de más de una hora no es nueva. Tras una parada de la integración de más de una hora, solo se anuncian las peticiones de la última hora.
 Un vencimiento fijado en un día ya pasado no dispara nada. Un reinicio no
 dispara nada dos veces; un elemento atrasado menos de una hora antes del
 reinicio dispara en ese momento.
