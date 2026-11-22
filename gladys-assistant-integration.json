@@ -1,177 +1,762 @@
 {
   "manifest_version": 1,
   "type": "device",
-  "name": "Demo Devices Template",
+  "name": "Taiga",
   "description": {
-    "en": "Starter template showing sensors, a switch, a dimmable light and a smart plug.",
-    "fr": "Template de démarrage : capteurs, interrupteur, lampe variable et prise connectée."
+    "en": "Taiga projects: open stories, tasks and issues, overdue items, sprint progress, issues from scenes.",
+    "fr": "Projets Taiga : stories, tâches et tickets ouverts, retards, avancement du sprint, tickets en scène.",
+    "de": "Taiga-Projekte: offene Stories, Aufgaben, Tickets, Verzug, Sprint-Fortschritt, Tickets aus Szenen.",
+    "es": "Proyectos Taiga: historias, tareas y peticiones abiertas, atrasos, sprint, peticiones desde escenas."
   },
   "version": "1.0.0",
-  "docker_image": "ghcr.io/gladysassistant/integration-template-js:1.0.0",
+  "docker_image": "ghcr.io/guim31/gladys-taiga:1.0.0",
   "gladys_version": ">=5.1.0",
-  "cover_image": "https://raw.githubusercontent.com/GladysAssistant/integration-template-js/master/cover.png",
-  "categories": ["lighting", "security", "environment"],
-  "transports": ["local", "cloud"],
+  "cover_image": "https://raw.githubusercontent.com/guim31/gladys-taiga/main/cover.png",
+  "categories": ["services"],
+  "transports": ["local"],
   "config_schema": [
     {
       "key": "intro",
       "type": "section",
-      "label": { "en": "Getting started", "fr": "Pour commencer" },
+      "label": {
+        "en": "Your Taiga",
+        "fr": "Votre Taiga",
+        "de": "Dein Taiga",
+        "es": "Su Taiga"
+      },
       "description": {
-        "en": "The demo weather station reads real data from the free Open-Meteo API: pick the coordinates to observe. No account, no API key.",
-        "fr": "La station météo de démonstration lit de vraies données via l'API gratuite Open-Meteo : choisissez les coordonnées à observer. Pas de compte, pas de clé d'API."
+        "en": "A self-hosted Taiga, or taiga.io (tree.taiga.io). Give the username or e-mail and password of a Taiga user with a password account (not GitHub nor LDAP).",
+        "fr": "Un Taiga auto-hébergé, ou taiga.io (tree.taiga.io). Donnez l'identifiant ou l'e-mail et le mot de passe d'un utilisateur de Taiga à compte par mot de passe (ni GitHub ni LDAP).",
+        "de": "Ein selbst gehostetes Taiga oder taiga.io (tree.taiga.io). Gib Benutzername oder E-Mail und Passwort eines Taiga-Benutzers mit Passwortkonto an (weder GitHub noch LDAP).",
+        "es": "Un Taiga autoalojado, o taiga.io (tree.taiga.io). Indique el usuario o correo y la contraseña de un usuario de Taiga con cuenta por contraseña (ni GitHub ni LDAP)."
       },
       "links": [
         {
-          "url": "https://open-meteo.com/en/docs",
-          "label": { "en": "Open-Meteo documentation", "fr": "Documentation Open-Meteo" }
+          "url": "https://docs.taiga.io/api.html",
+          "label": {
+            "en": "Taiga API",
+            "fr": "API de Taiga",
+            "de": "Taiga-API",
+            "es": "API de Taiga"
+          }
         }
       ]
     },
     {
-      "key": "latitude",
-      "type": "number",
-      "label": { "en": "Latitude", "fr": "Latitude" },
-      "description": {
-        "en": "Latitude used for the demo weather sensor.",
-        "fr": "Latitude utilisée par le capteur météo de démonstration."
+      "key": "url",
+      "type": "string",
+      "label": {
+        "en": "Address",
+        "fr": "Adresse",
+        "de": "Adresse",
+        "es": "Dirección"
       },
-      "placeholder": { "en": "e.g. 48.8566", "fr": "ex. 48.8566" },
+      "description": {
+        "en": "Address of Taiga, as in the browser, with https:// for HTTPS and :port if not the default. tree.taiga.io for the cloud offer.",
+        "fr": "Adresse de Taiga, comme dans le navigateur, avec https:// pour le HTTPS et :port s'il n'est pas celui par défaut. tree.taiga.io pour l'offre en ligne.",
+        "de": "Adresse von Taiga wie im Browser, mit https:// für HTTPS und :Port, falls nicht der Standard. tree.taiga.io für das Cloud-Angebot.",
+        "es": "Dirección de Taiga, como en el navegador, con https:// para HTTPS y :puerto si no es el predeterminado. tree.taiga.io para la oferta en la nube."
+      },
+      "placeholder": {
+        "en": "e.g. http://192.168.1.20:9000",
+        "fr": "ex. http://192.168.1.20:9000",
+        "de": "z. B. http://192.168.1.20:9000",
+        "es": "p. ej. http://192.168.1.20:9000"
+      },
       "required": true,
-      "default": 48.8566,
-      "min": -90,
-      "max": 90
+      "default": ""
     },
     {
-      "key": "longitude",
-      "type": "number",
-      "label": { "en": "Longitude", "fr": "Longitude" },
-      "description": {
-        "en": "Longitude used for the demo weather sensor.",
-        "fr": "Longitude utilisée par le capteur météo de démonstration."
+      "key": "username",
+      "type": "string",
+      "label": {
+        "en": "Username or e-mail",
+        "fr": "Identifiant ou e-mail",
+        "de": "Benutzername oder E-Mail",
+        "es": "Usuario o correo electrónico"
       },
-      "placeholder": { "en": "e.g. 2.3522", "fr": "ex. 2.3522" },
+      "description": {
+        "en": "A Taiga user who is a member of the projects to follow. Items created from Gladys are created in their name.",
+        "fr": "Un utilisateur de Taiga membre des projets à suivre. Les éléments créés depuis Gladys le sont à son nom.",
+        "de": "Ein Taiga-Benutzer, der Mitglied der zu verfolgenden Projekte ist. Aus Gladys erstellte Elemente werden in seinem Namen erstellt.",
+        "es": "Un usuario de Taiga miembro de los proyectos que se siguen. Los elementos creados desde Gladys se crean a su nombre."
+      },
       "required": true,
-      "default": 2.3522,
-      "min": -180,
-      "max": 180
+      "default": ""
     },
     {
-      "key": "unit",
-      "type": "select",
-      "label": { "en": "Temperature unit", "fr": "Unité de température" },
+      "key": "password",
+      "type": "secret",
+      "label": {
+        "en": "Password",
+        "fr": "Mot de passe",
+        "de": "Passwort",
+        "es": "Contraseña"
+      },
+      "required": true
+    },
+    {
+      "key": "options",
+      "type": "section",
+      "label": {
+        "en": "Options",
+        "fr": "Options",
+        "de": "Optionen",
+        "es": "Opciones"
+      }
+    },
+    {
+      "key": "projects",
+      "type": "string",
+      "label": {
+        "en": "Followed projects",
+        "fr": "Projets suivis",
+        "de": "Verfolgte Projekte",
+        "es": "Proyectos seguidos"
+      },
+      "description": {
+        "en": "Names or slugs separated by commas. Empty: every project of the user (20 at most). One device per followed project.",
+        "fr": "Noms ou slugs séparés par des virgules. Vide : tous les projets de l'utilisateur (20 au plus). Un appareil par projet suivi.",
+        "de": "Namen oder Slugs durch Kommas getrennt. Leer: alle Projekte des Benutzers (höchstens 20). Ein Gerät pro verfolgtem Projekt.",
+        "es": "Nombres o slugs separados por comas. Vacío: todos los proyectos del usuario (20 como máximo). Un dispositivo por proyecto seguido."
+      },
+      "placeholder": {
+        "en": "e.g. Home, Website",
+        "fr": "ex. Maison, Site web",
+        "de": "z. B. Haushalt, Website",
+        "es": "p. ej. Casa, Sitio web"
+      },
       "required": false,
-      "default": "celsius",
+      "default": ""
+    },
+    {
+      "key": "allow_self_signed",
+      "type": "boolean",
+      "label": {
+        "en": "Accept self-signed certificates",
+        "fr": "Accepter les certificats auto-signés",
+        "de": "Selbstsignierte Zertifikate akzeptieren",
+        "es": "Aceptar certificados autofirmados"
+      },
+      "description": {
+        "en": "For an https:// address whose certificate is self-signed. Tick only for your own server.",
+        "fr": "Pour une adresse en https:// dont le certificat est auto-signé. À cocher seulement pour votre propre serveur.",
+        "de": "Für eine https://-Adresse mit selbstsigniertem Zertifikat. Nur für deinen eigenen Server aktivieren.",
+        "es": "Para una dirección https:// con certificado autofirmado. Márquelo solo para su propio servidor."
+      },
+      "required": false,
+      "default": false
+    },
+    {
+      "key": "poll_interval",
+      "type": "select",
+      "label": {
+        "en": "Refresh interval",
+        "fr": "Intervalle de rafraîchissement",
+        "de": "Aktualisierungsintervall",
+        "es": "Intervalo de actualización"
+      },
+      "description": {
+        "en": "How often Taiga is read (four requests per followed project, plus the project list). Midnight, when items become overdue, is always followed on time.",
+        "fr": "Fréquence de lecture de Taiga (quatre requêtes par projet suivi, plus la liste des projets). Minuit, quand des éléments passent en retard, est toujours suivi à l'heure.",
+        "de": "Wie oft Taiga gelesen wird (vier Anfragen pro verfolgtem Projekt plus die Projektliste). Mitternacht, wenn Elemente überfällig werden, wird immer pünktlich verfolgt.",
+        "es": "Frecuencia de lectura de Taiga (cuatro solicitudes por proyecto seguido, más la lista de proyectos). La medianoche, cuando los elementos se atrasan, se sigue siempre a tiempo."
+      },
+      "required": false,
+      "default": "300",
       "options": [
-        { "value": "celsius", "label": { "en": "Celsius", "fr": "Celsius" } },
-        { "value": "fahrenheit", "label": { "en": "Fahrenheit", "fr": "Fahrenheit" } }
+        {
+          "value": "60",
+          "label": {
+            "en": "1 minute",
+            "fr": "1 minute",
+            "de": "1 Minute",
+            "es": "1 minuto"
+          }
+        },
+        {
+          "value": "120",
+          "label": {
+            "en": "2 minutes",
+            "fr": "2 minutes",
+            "de": "2 Minuten",
+            "es": "2 minutos"
+          }
+        },
+        {
+          "value": "300",
+          "label": {
+            "en": "5 minutes",
+            "fr": "5 minutes",
+            "de": "5 Minuten",
+            "es": "5 minutos"
+          }
+        },
+        {
+          "value": "600",
+          "label": {
+            "en": "10 minutes",
+            "fr": "10 minutes",
+            "de": "10 Minuten",
+            "es": "10 minutos"
+          }
+        }
       ]
     },
     {
-      "key": "poll_frequency",
-      "type": "number",
-      "label": { "en": "Refresh interval (s)", "fr": "Intervalle de rafraîchissement (s)" },
+      "key": "language",
+      "type": "select",
+      "label": {
+        "en": "Language of the feature names",
+        "fr": "Langue des noms de fonctionnalités",
+        "de": "Sprache der Funktionsnamen",
+        "es": "Idioma de los nombres de funciones"
+      },
       "description": {
-        "en": "How often sensors are polled, in seconds (one minute minimum).",
-        "fr": "Fréquence d'interrogation des capteurs, en secondes (une minute minimum)."
+        "en": "Names given to the features when a device is added, and texts sent to scenes.",
+        "fr": "Noms donnés aux fonctionnalités à l'ajout d'un appareil, et textes envoyés aux scènes.",
+        "de": "Namen der Funktionen beim Hinzufügen eines Geräts und an Szenen gesendete Texte.",
+        "es": "Nombres dados a las funciones al añadir un dispositivo y textos enviados a las escenas."
       },
       "required": false,
-      "default": 300,
-      "min": 60,
-      "max": 3600
+      "default": "fr",
+      "options": [
+        {
+          "value": "en",
+          "label": {
+            "en": "English",
+            "fr": "Anglais",
+            "de": "Englisch",
+            "es": "Inglés"
+          }
+        },
+        {
+          "value": "fr",
+          "label": {
+            "en": "French",
+            "fr": "Français",
+            "de": "Französisch",
+            "es": "Francés"
+          }
+        },
+        {
+          "value": "de",
+          "label": {
+            "en": "German",
+            "fr": "Allemand",
+            "de": "Deutsch",
+            "es": "Alemán"
+          }
+        },
+        {
+          "value": "es",
+          "label": {
+            "en": "Spanish",
+            "fr": "Espagnol",
+            "de": "Spanisch",
+            "es": "Español"
+          }
+        }
+      ]
     }
   ],
   "actions": [
     {
-      "key": "test_weather",
-      "label": { "en": "Test the weather provider", "fr": "Tester le fournisseur météo" },
+      "key": "test_connection",
+      "label": {
+        "en": "Test the connection",
+        "fr": "Tester la connexion",
+        "de": "Verbindung testen",
+        "es": "Probar la conexión"
+      },
+      "description": {
+        "en": "Reads Taiga now and reports what it finds.",
+        "fr": "Lit Taiga maintenant et indique ce qu'elle trouve.",
+        "de": "Liest Taiga jetzt und meldet, was gefunden wurde.",
+        "es": "Lee Taiga ahora e informa de lo que encuentra."
+      },
       "timeout_seconds": 30
-    },
-    {
-      "key": "identify",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "fields": [
-        {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
-        }
-      ]
     }
   ],
   "scene_triggers": [
     {
-      "key": "motion_detected",
-      "label": { "en": "Motion detected", "fr": "Mouvement détecté" },
+      "key": "item_overdue",
+      "label": {
+        "en": "Taiga item overdue",
+        "fr": "Élément Taiga en retard",
+        "de": "Taiga-Element überfällig",
+        "es": "Elemento de Taiga atrasado"
+      },
       "description": {
-        "en": "A demo motion sensor saw a person or an animal move.",
-        "fr": "Un détecteur de démonstration a vu bouger une personne ou un animal."
+        "en": "At midnight, an open user story, task or issue due that day is not closed.",
+        "fr": "À minuit, une user story, une tâche ou un ticket dû ce jour-là n'est pas fermé.",
+        "de": "Um Mitternacht ist eine an diesem Tag fällige User Story, Aufgabe oder ein Ticket nicht geschlossen.",
+        "es": "A medianoche, una historia, tarea o petición que vencía ese día no está cerrada."
       },
       "fields": [
         {
-          "key": "device",
+          "key": "project",
           "type": "select",
           "source": "devices",
-          "label": { "en": "Sensor", "fr": "Détecteur" }
+          "label": {
+            "en": "Project (empty: any)",
+            "fr": "Projet (vide : tous)",
+            "de": "Projekt (leer: alle)",
+            "es": "Proyecto (vacío: cualquiera)"
+          }
         },
         {
-          "key": "target",
-          "type": "multi_select",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" },
+          "key": "kind",
+          "type": "select",
+          "label": {
+            "en": "Kind (empty: any)",
+            "fr": "Type (vide : tous)",
+            "de": "Art (leer: alle)",
+            "es": "Tipo (vacío: cualquiera)"
+          },
           "options": [
-            { "value": "person", "label": { "en": "Person", "fr": "Personne" } },
-            { "value": "animal", "label": { "en": "Animal", "fr": "Animal" } }
+            {
+              "value": "user_story",
+              "label": {
+                "en": "User story",
+                "fr": "User story",
+                "de": "User Story",
+                "es": "Historia de usuario"
+              }
+            },
+            {
+              "value": "task",
+              "label": {
+                "en": "Task",
+                "fr": "Tâche",
+                "de": "Aufgabe",
+                "es": "Tarea"
+              }
+            },
+            {
+              "value": "issue",
+              "label": {
+                "en": "Issue",
+                "fr": "Ticket",
+                "de": "Ticket",
+                "es": "Petición"
+              }
+            }
           ]
         }
       ],
       "variables": [
         {
-          "key": "target",
+          "key": "item",
           "type": "string",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" }
+          "label": {
+            "en": "Title",
+            "fr": "Titre",
+            "de": "Titel",
+            "es": "Título"
+          }
+        },
+        {
+          "key": "ref",
+          "type": "number",
+          "label": {
+            "en": "Number (#)",
+            "fr": "Numéro (#)",
+            "de": "Nummer (#)",
+            "es": "Número (#)"
+          }
+        },
+        {
+          "key": "kind",
+          "type": "string",
+          "label": {
+            "en": "Kind (user_story, task, issue)",
+            "fr": "Type (user_story, task, issue)",
+            "de": "Art (user_story, task, issue)",
+            "es": "Tipo (user_story, task, issue)"
+          }
+        },
+        {
+          "key": "project_name",
+          "type": "string",
+          "label": {
+            "en": "Project",
+            "fr": "Projet",
+            "de": "Projekt",
+            "es": "Proyecto"
+          }
+        },
+        {
+          "key": "status",
+          "type": "string",
+          "label": {
+            "en": "Status",
+            "fr": "Statut",
+            "de": "Status",
+            "es": "Estado"
+          }
+        },
+        {
+          "key": "due_date",
+          "type": "string",
+          "label": {
+            "en": "Due date (YYYY-MM-DD)",
+            "fr": "Échéance (AAAA-MM-JJ)",
+            "de": "Fälligkeit (JJJJ-MM-TT)",
+            "es": "Vencimiento (AAAA-MM-DD)"
+          }
+        },
+        {
+          "key": "url",
+          "type": "string",
+          "label": {
+            "en": "Link",
+            "fr": "Lien",
+            "de": "Link",
+            "es": "Enlace"
+          }
+        }
+      ]
+    },
+    {
+      "key": "issue_added",
+      "label": {
+        "en": "New Taiga issue",
+        "fr": "Nouveau ticket Taiga",
+        "de": "Neues Taiga-Ticket",
+        "es": "Nueva petición de Taiga"
+      },
+      "description": {
+        "en": "An issue was created in a followed project.",
+        "fr": "Un ticket a été créé dans un projet suivi.",
+        "de": "Ein Ticket wurde in einem verfolgten Projekt erstellt.",
+        "es": "Se creó una petición en un proyecto seguido."
+      },
+      "fields": [
+        {
+          "key": "project",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Project (empty: any)",
+            "fr": "Projet (vide : tous)",
+            "de": "Projekt (leer: alle)",
+            "es": "Proyecto (vacío: cualquiera)"
+          }
+        }
+      ],
+      "variables": [
+        {
+          "key": "item",
+          "type": "string",
+          "label": {
+            "en": "Title",
+            "fr": "Titre",
+            "de": "Titel",
+            "es": "Título"
+          }
+        },
+        {
+          "key": "ref",
+          "type": "number",
+          "label": {
+            "en": "Number (#)",
+            "fr": "Numéro (#)",
+            "de": "Nummer (#)",
+            "es": "Número (#)"
+          }
+        },
+        {
+          "key": "project_name",
+          "type": "string",
+          "label": {
+            "en": "Project",
+            "fr": "Projet",
+            "de": "Projekt",
+            "es": "Proyecto"
+          }
+        },
+        {
+          "key": "status",
+          "type": "string",
+          "label": {
+            "en": "Status",
+            "fr": "Statut",
+            "de": "Status",
+            "es": "Estado"
+          }
+        },
+        {
+          "key": "url",
+          "type": "string",
+          "label": {
+            "en": "Link",
+            "fr": "Lien",
+            "de": "Link",
+            "es": "Enlace"
+          }
         }
       ]
     }
   ],
   "scene_actions": [
     {
-      "key": "identify_device",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "description": {
-        "en": "Make a device signal itself (the demo light blinks).",
-        "fr": "Fait se signaler un appareil (la lampe de démonstration clignote)."
+      "key": "create_issue",
+      "label": {
+        "en": "Create a Taiga issue",
+        "fr": "Créer un ticket Taiga",
+        "de": "Taiga-Ticket erstellen",
+        "es": "Crear una petición de Taiga"
       },
-      "timeout_seconds": 15,
+      "description": {
+        "en": "Creates an issue in a project, with its default type, priority and severity.",
+        "fr": "Crée un ticket dans un projet, avec ses type, priorité et gravité par défaut.",
+        "de": "Erstellt ein Ticket in einem Projekt, mit Standardtyp, -priorität und -schweregrad.",
+        "es": "Crea una petición en un proyecto, con su tipo, prioridad y gravedad predeterminados."
+      },
+      "timeout_seconds": 20,
       "fields": [
         {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
+          "key": "title",
+          "type": "string",
+          "required": true,
+          "label": {
+            "en": "Title",
+            "fr": "Titre",
+            "de": "Titel",
+            "es": "Título"
+          }
+        },
+        {
+          "key": "project",
+          "type": "string",
+          "label": {
+            "en": "Project name or slug (empty: the first followed)",
+            "fr": "Nom ou slug du projet (vide : le premier suivi)",
+            "de": "Projektname oder Slug (leer: das erste verfolgte)",
+            "es": "Nombre o slug del proyecto (vacío: el primero seguido)"
+          }
+        },
+        {
+          "key": "description",
+          "type": "string",
+          "label": {
+            "en": "Description (optional)",
+            "fr": "Description (facultative)",
+            "de": "Beschreibung (optional)",
+            "es": "Descripción (opcional)"
+          }
         }
       ],
       "outputs": [
         {
-          "key": "signalled",
-          "type": "boolean",
-          "label": { "en": "Device signalled", "fr": "Appareil signalé" }
+          "key": "ref",
+          "type": "number",
+          "label": {
+            "en": "Number (#)",
+            "fr": "Numéro (#)",
+            "de": "Nummer (#)",
+            "es": "Número (#)"
+          }
+        },
+        {
+          "key": "id",
+          "type": "number",
+          "label": {
+            "en": "Id",
+            "fr": "Identifiant",
+            "de": "ID",
+            "es": "Identificador"
+          }
+        },
+        {
+          "key": "title",
+          "type": "string",
+          "label": {
+            "en": "Title",
+            "fr": "Titre",
+            "de": "Titel",
+            "es": "Título"
+          }
+        },
+        {
+          "key": "project_name",
+          "type": "string",
+          "label": {
+            "en": "Project",
+            "fr": "Projet",
+            "de": "Projekt",
+            "es": "Proyecto"
+          }
+        },
+        {
+          "key": "url",
+          "type": "string",
+          "label": {
+            "en": "Link",
+            "fr": "Lien",
+            "de": "Link",
+            "es": "Enlace"
+          }
+        }
+      ]
+    },
+    {
+      "key": "create_user_story",
+      "label": {
+        "en": "Create a Taiga user story",
+        "fr": "Créer une user story Taiga",
+        "de": "Taiga-User-Story erstellen",
+        "es": "Crear una historia de usuario de Taiga"
+      },
+      "description": {
+        "en": "Adds a user story to the backlog of a project.",
+        "fr": "Ajoute une user story au backlog d'un projet.",
+        "de": "Fügt dem Backlog eines Projekts eine User Story hinzu.",
+        "es": "Añade una historia de usuario al backlog de un proyecto."
+      },
+      "timeout_seconds": 20,
+      "fields": [
+        {
+          "key": "title",
+          "type": "string",
+          "required": true,
+          "label": {
+            "en": "Title",
+            "fr": "Titre",
+            "de": "Titel",
+            "es": "Título"
+          }
+        },
+        {
+          "key": "project",
+          "type": "string",
+          "label": {
+            "en": "Project name or slug (empty: the first followed)",
+            "fr": "Nom ou slug du projet (vide : le premier suivi)",
+            "de": "Projektname oder Slug (leer: das erste verfolgte)",
+            "es": "Nombre o slug del proyecto (vacío: el primero seguido)"
+          }
+        },
+        {
+          "key": "description",
+          "type": "string",
+          "label": {
+            "en": "Description (optional)",
+            "fr": "Description (facultative)",
+            "de": "Beschreibung (optional)",
+            "es": "Descripción (opcional)"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "key": "ref",
+          "type": "number",
+          "label": {
+            "en": "Number (#)",
+            "fr": "Numéro (#)",
+            "de": "Nummer (#)",
+            "es": "Número (#)"
+          }
+        },
+        {
+          "key": "id",
+          "type": "number",
+          "label": {
+            "en": "Id",
+            "fr": "Identifiant",
+            "de": "ID",
+            "es": "Identificador"
+          }
+        },
+        {
+          "key": "title",
+          "type": "string",
+          "label": {
+            "en": "Title",
+            "fr": "Titre",
+            "de": "Titel",
+            "es": "Título"
+          }
+        },
+        {
+          "key": "project_name",
+          "type": "string",
+          "label": {
+            "en": "Project",
+            "fr": "Projet",
+            "de": "Projekt",
+            "es": "Proyecto"
+          }
+        },
+        {
+          "key": "url",
+          "type": "string",
+          "label": {
+            "en": "Link",
+            "fr": "Lien",
+            "de": "Link",
+            "es": "Enlace"
+          }
         }
       ]
     }
   ],
   "widgets": [
     {
-      "key": "demo_status",
-      "label": { "en": "Demo status", "fr": "État de la démo" },
-      "description": {
-        "en": "Live temperature and plug power, plug connection and observed location.",
-        "fr": "Température et puissance en direct, connexion de la prise, position observée."
+      "key": "project_overview",
+      "label": {
+        "en": "Taiga projects",
+        "fr": "Projets Taiga",
+        "de": "Taiga-Projekte",
+        "es": "Proyectos de Taiga"
       },
-      "icon": "activity",
-      "action_timeout_seconds": 15
+      "description": {
+        "en": "Overdue items, items due today, open issues and the sprint in progress of your projects.",
+        "fr": "Éléments en retard et du jour, tickets ouverts et sprint en cours de vos projets.",
+        "de": "Überfällige und heute fällige Elemente, offene Tickets und laufender Sprint deiner Projekte.",
+        "es": "Elementos atrasados y de hoy, peticiones abiertas y sprint en curso de sus proyectos."
+      },
+      "icon": "trello",
+      "settings": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "required": false,
+          "label": {
+            "en": "Project (empty: all followed)",
+            "fr": "Projet (vide : tous les suivis)",
+            "de": "Projekt (leer: alle verfolgten)",
+            "es": "Proyecto (vacío: todos los seguidos)"
+          },
+          "description": {
+            "en": "A project device shows only that project.",
+            "fr": "Un appareil projet n'affiche que ce projet.",
+            "de": "Ein Projektgerät zeigt nur dieses Projekt.",
+            "es": "Un dispositivo de proyecto muestra solo ese proyecto."
+          }
+        },
+        {
+          "key": "show_items",
+          "type": "boolean",
+          "required": false,
+          "default": true,
+          "label": {
+            "en": "Show the list of late items",
+            "fr": "Afficher la liste des éléments en retard",
+            "de": "Liste der überfälligen Elemente anzeigen",
+            "es": "Mostrar la lista de elementos atrasados"
+          },
+          "description": {
+            "en": "Items overdue or due today, 8 at most. Untick to keep only the figures.",
+            "fr": "Éléments en retard ou du jour, 8 au plus. À décocher pour ne garder que les chiffres.",
+            "de": "Überfällige oder heute fällige Elemente, höchstens 8. Abwählen, um nur die Zahlen zu behalten.",
+            "es": "Elementos atrasados o de hoy, 8 como máximo. Desmárquelo para mantener solo las cifras."
+          }
+        }
+      ]
     }
   ]
 }

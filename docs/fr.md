@@ -1,67 +1,177 @@
-# Template de démonstration
+# Taiga
 
-Ceci est la documentation utilisateur de l'intégration. Gladys ré-héberge ce
-fichier et affiche un lien **Documentation** permanent vers lui dans l'écran
-de configuration (dans la langue de l'utilisateur, avec l'anglais en repli) —
-c'est au moment de configurer que l'utilisateur en a le plus besoin. Gardez
-les courtes indications d'accueil dans les blocs `section` du `config_schema`
-du manifest ; mettez ici le pas-à-pas détaillé (captures d'écran, dépannage…).
+Retrouvez vos projets [Taiga](https://taiga.io) dans Gladys : les user stories,
+tâches et tickets ouverts, les éléments en retard, et où en est le sprint en
+cours (avancement et jours restants). Une scène réagit quand un élément passe
+en retard ou qu'un nouveau ticket est ouvert, une autre ouvre un ticket ou
+ajoute une user story au backlog, et un widget montre le tout sur le tableau
+de bord.
 
-## Ce que vous obtenez
+> **Vos retours sont les bienvenus.** Cette intégration a été testée contre un
+> vrai serveur Taiga (image Docker `taigaio/taiga-back` du 22 novembre 2026,
+> avec PostgreSQL 16 et RabbitMQ 4), pas encore à l'usage, et pas contre
+> taiga.io. Si quelque chose ne marche pas comme décrit, dites-le sur le
+> [forum de Gladys](https://community.gladysassistant.com) ou dans les
+> [issues](https://github.com/guim31/gladys-taiga/issues).
 
-Six appareils de démonstration apparaissent après l'installation : une
-station météo (vraies données Open-Meteo), un interrupteur, une lampe
-variable, une prise connectée avec mesure de puissance, un détecteur de
-mouvement et une caméra.
+## Ce qu'il faut
 
-## Configuration
+- Gladys Assistant 5.1.0 ou plus récent.
+- Un **Taiga auto-hébergé** joignable depuis Gladys, ou un compte sur
+  **taiga.io** (l'offre en ligne a la même API ; non testée).
+- L'**identifiant** (ou l'e-mail) et le **mot de passe** d'un utilisateur de
+  Taiga membre des projets à suivre. Il faut un **compte à mot de passe** : un
+  utilisateur qui se connecte par GitHub, GitLab ou LDAP ne peut pas se
+  connecter depuis Gladys. Un utilisateur dédié, ajouté comme membre des
+  projets, est une bonne idée.
 
-1. Ouvrez l'onglet **Configuration** de l'intégration.
-2. Renseignez la **latitude** et la **longitude** que la station météo de
-   démonstration doit observer (Paris par défaut), et choisissez votre unité
-   de température. L'**intervalle de rafraîchissement** règle la fréquence
-   de lecture de la station météo et de la puissance de la prise : toutes
-   les 5 minutes par défaut, toutes les minutes au plus.
-3. Enregistrez : les appareils apparaissent dans l'onglet **Découverte**,
-   prêts à être ajoutés.
+L'intégration voit les projets dont cet utilisateur est membre, et agit **en
+son nom** : les tickets et user stories créés depuis Gladys l'ont pour auteur.
+Un membre dont le rôle ne permet pas d'ajouter des tickets ou des user stories
+peut suivre un projet, mais rien y créer.
 
-Le réglage **Préférer la connexion locale** pilote la prise de
-démonstration : elle affiche en badge le canal réellement utilisé (local ou
-cloud), avec un point orange quand elle fonctionne en mode dégradé (local
-refusé, bascule cloud).
+## Mise en route
 
-## Actions
+1. Dans Gladys, **Intégrations** → installez **Taiga**.
+2. Dans l'écran **Configuration**, renseignez :
+   - **Adresse** : l'adresse de Taiga comme dans le navigateur, par exemple
+     `http://192.168.1.20:9000`, ou `https://taiga.example.org` derrière un
+     proxy inverse (un préfixe de chemin comme `/taiga` est gardé). Pour
+     taiga.io, `https://tree.taiga.io` ;
+   - **Identifiant ou e-mail** et **Mot de passe**.
+3. Options :
+   - **Projets suivis** : noms ou slugs (le nom dans l'adresse du projet)
+     séparés par des virgules. Vide : tous les projets de l'utilisateur, 20
+     au plus ;
+   - **Accepter les certificats auto-signés** : pour une adresse en
+     `https://` au certificat auto-signé, sur votre propre serveur seulement ;
+   - **Intervalle de rafraîchissement** : 1 à 10 minutes (5 par défaut).
+     Minuit, quand des éléments passent en retard, est toujours suivi à
+     l'heure ;
+   - **Langue des noms de fonctionnalités** : les noms donnés aux
+     fonctionnalités à l'ajout d'un appareil (français par défaut).
+4. Enregistrez, puis **Tester la connexion** : elle lit Taiga et donne le
+   nombre d'éléments ouverts et en retard, et de projets suivis.
+5. Dans l'onglet **Découverte**, ajoutez les appareils voulus.
 
-- **Tester le fournisseur météo** — effectue une requête en direct vers
-  Open-Meteo et affiche la température et l'humidité actuelles sous le
-  bouton.
-- **Identifier un appareil** — choisissez un de vos appareils dans la liste
-  et il se signale (la lampe de démonstration « clignote » dans les logs).
+## Appareils
 
-## Scènes
+**Taiga _adresse_**, l'instance, avec une fonctionnalité : `Joignable` (1
+quand Taiga répond, 0 sinon).
 
-L'intégration ajoute ses propres cartes à l'éditeur de scènes (Gladys 5.1
-ou plus récent), dans la catégorie **Intégrations** :
+**Taiga _projet_** pour chaque projet suivi :
 
-- **Mouvement détecté** (déclencheur) — lance la scène quand un détecteur
-  de démonstration voit bouger quelque chose. Choisissez éventuellement le
-  détecteur et ce qui a bougé (personne, animal) ; laissés vides, toute
-  détection correspond. Les actions suivantes peuvent lire ce qui a bougé
-  avec `{{triggerEvent.data.target}}`.
-- **Identifier un appareil** (action) — fait se signaler l'appareil choisi.
-  Elle indique si l'appareil a pu se signaler, pour que les actions
-  suivantes puissent en dépendre.
+| Fonctionnalité             | Ce qu'elle dit                                                                       |
+| -------------------------- | ------------------------------------------------------------------------------------ |
+| `User stories ouvertes`    | les user stories dont le statut n'est pas fermé                                      |
+| `Tâches ouvertes`          | les tâches dont le statut n'est pas fermé                                            |
+| `Tickets ouverts`          | les tickets dont le statut n'est pas fermé (0 quand le module Tickets est désactivé) |
+| `Éléments en retard`       | user stories, tâches et tickets ouverts dont l'échéance est passée                   |
+| `Avancement du sprint`     | % du sprint en cours : points fermés, sinon user stories fermées                     |
+| `Jours restants du sprint` | jours jusqu'à la date de fin du sprint (0 le dernier jour)                           |
+| `Sprint en cours`          | le nom du sprint en cours ; `Aucun` s'il n'y en a pas                                |
+
+Un élément est **en retard** une fois son jour d'échéance terminé, dans le
+fuseau de Gladys, tant que son statut n'est pas fermé. Le **sprint en cours**
+est le sprint ouvert dont la date de début est la plus récente déjà atteinte.
+Quand Taiga ne répond pas, les compteurs gardent leur dernière valeur et
+`Joignable` passe à 0.
 
 ## Tableau de bord
 
-Ajoutez le widget **État de la démo** à un tableau de bord : il affiche en
-direct la température de la station météo et la puissance de la prise du
-bureau, la connexion utilisée par la prise (en orange si dégradée) et la
-position observée. Son bouton **Identifier la lampe** fait se signaler la
-lampe de démonstration.
+Le widget **Projets Taiga** montre trois tuiles (en retard, aujourd'hui,
+tickets ouverts) et une liste de 8 lignes au plus : les sprints en cours avec
+leur avancement et leurs jours restants, puis les éléments en retard ou du
+jour, avec leur type, leur numéro et leur projet. Choisissez un appareil
+projet dans les réglages du widget pour ne voir que ce projet ; laissez vide
+pour tous les projets suivis. Décochez **Afficher la liste des éléments en
+retard** pour ne garder que les chiffres et les sprints. Les projets portent
+leur nom dans Gladys une fois leur appareil ajouté.
+
+Les compteurs peuvent aussi aller sur le tableau de bord comme toute
+fonctionnalité d'appareil.
+
+## Scènes
+
+### Déclencheurs
+
+- **Élément Taiga en retard** : à minuit, une user story, une tâche ou un
+  ticket ouvert dû ce jour-là n'est pas fermé. Une fois par élément et par
+  échéance. Filtres : le projet (un appareil projet), le type (user story,
+  tâche, ticket).
+- **Nouveau ticket Taiga** : un ticket a été créé dans un projet suivi.
+  Filtre : le projet.
+
+Informations transmises aux actions : le titre, le numéro (`#`), le type, le
+projet, le statut, l'échéance et le lien vers l'élément dans Taiga.
+
+Un nouveau ticket est vu à la lecture suivante : dans l'intervalle de
+rafraîchissement. Un projet tout juste ajouté aux projets suivis n'amène aucun
+« nouveau ticket », et un ticket créé puis fermé entre deux lectures n'est pas vu, et un ticket rouvert vieux de plus d'une heure n'est pas nouveau. Après un arrêt de l'intégration de plus d'une heure, seuls les tickets de la dernière heure sont annoncés. Une échéance fixée à un jour déjà passé ne déclenche rien. Un redémarrage
+ne déclenche rien deux fois ; un élément passé en retard moins d'une heure
+avant le retour de l'intégration déclenche à ce moment-là.
+
+### Actions
+
+- **Créer un ticket Taiga** : un titre, le projet par nom ou slug (vide : le
+  premier projet suivi), une description facultative. Le ticket reçoit les
+  type, priorité et gravité par défaut du projet.
+- **Créer une user story Taiga** : les mêmes champs ; la user story va dans
+  le backlog du projet.
+
+Résultats des deux : le numéro (`#`), l'identifiant, le titre, le projet et
+le lien. Un échec (projet introuvable, module Tickets désactivé, droit
+manquant, Taiga qui ne répond pas) s'affiche comme une erreur. Les champs
+acceptent les variables de scène : `{{triggerEvent.data.item}}`.
+
+### Idées de scènes
+
+- **Élément Taiga en retard** : envoyer le titre et le lien sur Telegram.
+- **Nouveau ticket Taiga** dans le projet `Site web` : faire clignoter une
+  lampe du bureau.
+- Quand le lave-linge signale une erreur, **Créer un ticket Taiga**
+  `Lave-linge : erreur` dans le projet `Maison`.
+- Un bouton près de la porte lance **Créer une user story Taiga**
+  `Réparer le portail`.
 
 ## Dépannage
 
-L'intégration journalise tout ce qu'elle fait : consultez les logs de
-l'intégration depuis l'interface Gladys (ou `docker logs` sur l'hôte) avec
-`LOG_LEVEL=debug` pour le détail complet.
+- **« Taiga ne répond pas »** : vérifiez l'adresse et le port depuis la
+  machine de Gladys (l'adresse ouvre Taiga dans un navigateur).
+- **« Identifiant ou mot de passe refusé »** : le mot de passe a changé, ou
+  l'utilisateur se connecte par GitHub, GitLab ou LDAP : prenez un
+  utilisateur à compte par mot de passe.
+- **« Aucune API Taiga à cette adresse »** : l'adresse répond, mais pas avec
+  l'API de Taiga (`/api/v1`) : vérifiez le port et le préfixe de chemin.
+- **« L'adresse redirige »** : saisissez l'adresse en `https://`.
+- **« Cet utilisateur n'a pas ce droit dans le projet »** : le rôle de
+  l'utilisateur dans le projet ne permet pas d'ajouter des tickets ou des
+  user stories.
+- **Un projet manque** : l'utilisateur doit en être membre ; un nom saisi
+  dans **Projets suivis** qui ne correspond à aucun projet est ignoré, et
+  **Tester la connexion** le cite. Au-delà de 20 projets, listez ceux à
+  suivre.
+- Après un mot de passe refusé, Taiga n'est retenté que toutes les 15 minutes, pour ne pas bloquer le compte : corrigez la configuration pour réessayer tout de suite.
+- Journaux : `LOG_LEVEL=debug` sur le conteneur montre chaque lecture.
+
+## Limites
+
+- Taiga est lu toutes les 1 à 10 minutes (et à minuit) : un changement dans
+  Taiga arrive dans Gladys dans ce délai. Les webhooks de Taiga ne sont pas
+  utilisés.
+- À chaque lecture : la liste des projets, puis pour chaque projet suivi ses
+  user stories, tâches, tickets et sprints ouverts (quatre requêtes, plus la liste des projets). Sur
+  taiga.io, gardez un intervalle long : le service limite le nombre de
+  requêtes.
+- La connexion est gardée en mémoire et renouvelée par le jeton de
+  rafraîchissement de Taiga à son expiration (au bout de 24 heures sur un
+  serveur par défaut) ; le mot de passe n'est renvoyé que si Taiga refuse les
+  deux.
+- L'intégration crée des tickets et des user stories ; elle ne modifie, ne
+  ferme, n'assigne ni ne supprime rien, et ne lit ni epics, ni pages de wiki,
+  ni commentaires.
+- Gladys ne garde aucune donnée de Taiga en dehors de
+  `/data/taiga-state.json` (l'heure de la dernière lecture et le dernier
+  numéro de ticket vu dans chaque projet, pour qu'aucun événement ne parte
+  deux fois).
+- Sans lien avec Taiga ni Kaleidos.

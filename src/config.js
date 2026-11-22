@@ -1,45 +1,118 @@
 // -----------------------------------------------------------------------------
-// Integration configuration.
+// Integration configuration: defaults (they mirror the `default` values of the
+// manifest `config_schema`, see test/manifest.test.js) and normalization, so
+// the rest of the code never deals with strings, blanks or `undefined`.
 //
-// The configuration is filled in by the user in Gladys, from the `config_schema`
-// declared in `gladys-assistant-integration.json`. The SDK fetches it for you
-// (`gladys.getConfig()`) and notifies you of every change through
-// `gladys.onConfigUpdated()`.
-//
-// This module only provides defaults and normalizes the received object, so the
-// rest of the code never has to deal with `undefined`.
+// One Taiga instance (its address, and the username and password of one of
+// its users), read on a timer of the container.
 // -----------------------------------------------------------------------------
 
-// Defaults: they MUST stay consistent with the `default` values declared in the
-// `config_schema` of the manifest.
+export const LANGUAGES = ['en', 'fr', 'de', 'es'];
+
+// Refresh intervals offered in the configuration, in seconds.
+export const POLL_INTERVALS = ['60', '120', '300', '600'];
+
 export const DEFAULT_CONFIG = {
-  latitude: 48.8566, // Paris
-  longitude: 2.3522,
-  unit: 'celsius', // 'celsius' | 'fahrenheit'
-  // Seconds between two reads of the polled sensors. Gladys polls at most once
-  // a minute: slower intervals are applied by skipping polls (see
-  // createPoller in src/devices/index.js).
-  poll_frequency: 300,
-  // Reserved key (NOT in config_schema): because the manifest declares both
-  // 'local' and 'cloud' in its `transports` field, Gladys shows a standard
-  // "Prefer the local connection" toggle and sends the user's choice here.
-  // Read-only for the integration; defaults to true.
-  GLADYS_PREFER_LOCAL: true,
+  url: '',
+  username: '',
+  password: '',
+  projects: '',
+  allow_self_signed: false,
+  poll_interval: '300',
+  language: 'fr',
 };
 
+// The cloud offer: its web app and its API live on two hosts.
+const CLOUD_HOSTS = new Set(['taiga.io', 'www.taiga.io', 'tree.taiga.io', 'api.taiga.io']);
+export const CLOUD = { web: 'https://tree.taiga.io', api: 'https://api.taiga.io/api/v1' };
+
 /**
- * Merge the user config with the defaults.
- * @param {Record<string, unknown>} raw config returned by the SDK
+ * Parse the address typed by the user: a bare host or IP (`192.0.2.10:9000`),
+ * or the URL copied from the browser
+ * (`https://taiga.example.org/project/maison/backlog`). HTTP by default. A
+ * path prefix is kept (Taiga behind a reverse proxy under `/taiga`), the API
+ * path and the screens of the web app are dropped.
+ * @param {unknown} raw
+ * @returns {{ web: string, api: string }|null} the web app and its API (`…/api/v1`)
+ */
+export function parseServerUrl(raw) {
+  if (typeof raw !== 'string') {
+    return null;
+  }
+  const text = raw.trim();
+  if (!text) {
+    return null;
+  }
+  const withScheme = /^[a-z][a-z0-9+.-]*:\/\//i.test(text) ? text : `http://${text}`;
+  let url;
+  try {
+    url = new URL(withScheme);
+  } catch {
+    return null;
+  }
+  if (!['http:', 'https:'].includes(url.protocol) || !url.hostname) {
+    return null;
+  }
+  // Credentials in the address would end up in the logs.
+  if (url.username || url.password) {
+    return null;
+  }
+  if (CLOUD_HOSTS.has(url.hostname.toLowerCase())) {
+    return { ...CLOUD };
+  }
+  const path = url.pathname
+    .replace(/\/api(\/.*)?$/, '')
+    .replace(
+      /\/(project|discover|login|register|profile|user-settings|notifications|projects)(\/.*)?$/,
+      '',
+    )
+    .replace(/\/+$/, '');
+  const web = `${url.origin}${path}`;
+  return { web, api: `${web}/api/v1` };
+}
+
+/** Host part shown to the user (no scheme). */
+export const hostOf = (url) => String(url ?? '').replace(/^https?:\/\//, '');
+
+/**
+ * A list of names or ids, as typed, separated by commas or semicolons (the
+ * projects to follow).
+ * @param {unknown} raw
+ * @returns {string[]}
+ */
+export function parseNameList(raw) {
+  if (typeof raw !== 'string') {
+    return [];
+  }
+  return [
+    ...new Set(
+      raw
+        .split(/[,;\n]/)
+        .map((item) => item.trim())
+        .filter(Boolean),
+    ),
+  ];
+}
+
+const bool = (value) => value === true || value === 'true';
+
+/**
+ * @param {Record<string, unknown>} raw the configuration returned by the SDK
  */
 export function normalizeConfig(raw = {}) {
+  const source = raw && typeof raw === 'object' ? raw : {};
+  const typed = typeof source.url === 'string' ? source.url.trim() : '';
+  const poll = String(source.poll_interval ?? '');
   return {
-    ...DEFAULT_CONFIG,
-    ...raw,
-    // Force the types: config may arrive as strings from a form.
-    latitude: Number(raw.latitude ?? DEFAULT_CONFIG.latitude),
-    longitude: Number(raw.longitude ?? DEFAULT_CONFIG.longitude),
-    poll_frequency: Number(raw.poll_frequency ?? DEFAULT_CONFIG.poll_frequency),
-    // The preference is a boolean; anything but an explicit false means true.
-    GLADYS_PREFER_LOCAL: raw.GLADYS_PREFER_LOCAL !== false,
+    server: parseServerUrl(typed),
+    urlTyped: typed !== '',
+    // The password is kept as typed, blanks included.
+    username: typeof source.username === 'string' ? source.username.trim() : '',
+    password: typeof source.password === 'string' ? source.password : '',
+    projects: parseNameList(source.projects),
+    allowSelfSigned: bool(source.allow_self_signed),
+    pollIntervalMs:
+      Number(POLL_INTERVALS.includes(poll) ? poll : DEFAULT_CONFIG.poll_interval) * 1000,
+    language: LANGUAGES.includes(source.language) ? source.language : DEFAULT_CONFIG.language,
   };
 }

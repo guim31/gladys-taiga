@@ -31,16 +31,22 @@ pushing.
 ## Architecture
 
 ```
-index.js                          SDK wiring only: handlers registered before connect()
-src/devices/index.js              registry of the device blueprints + dispatch helpers
-src/devices/<type>.js             one device type per file (buildDevice, onPoll, onSetValue...)
-src/scenes.js                     scene action handlers (manifest `scene_actions`)
-src/widgets.js                    dashboard widget handlers (manifest `widgets`)
-src/config.js                     DEFAULT_CONFIG (mirrors the manifest defaults) + normalization
-src/weather.js                    example driver (Open-Meteo)
-gladys-assistant-integration.json manifest: name, config_schema, actions, image...
-docs/en.md, docs/fr.md            user documentation, re-hosted by Gladys (mandatory)
+index.js                          SDK wiring only: src/app.js registers the handlers before connect()
+src/app.js                        every SDK handler -> the hub (also used by the tests)
+src/hub.js                        reading timer, states, scene events, scene actions, deduplicated logs
+src/devices.js                    instance + project devices: features, names (4 languages), states
+src/taiga/client.js               Taiga REST API client (POST /auth, Bearer, refresh), errors by kind
+src/taiga/http.js                 node:http/https request (self-signed certificates on request)
+src/taiga/model.js                projects, items, sprint in progress; local day; counters; lookup
+src/scenes.js                     scene actions create_issue, create_user_story
+src/widgets.js                    dashboard widget `project_overview` (manifest `widgets`)
+src/texts.js                      connection, error, report and action texts (4 languages)
+src/config.js                     DEFAULT_CONFIG (mirrors the manifest defaults), address parsing
+src/store.js                      /data/taiga-state.json (instance, last reading, last issue id per project)
+gladys-assistant-integration.json manifest: name, config_schema, actions, triggers, widgets...
+docs/{en,fr,de,es}.md             user documentation, re-hosted by Gladys (en and fr mandatory)
 test/                             node --test, against the SDK's fake Gladys (integration-sdk/testing)
+                                  and helpers/fakeTaiga.js (built from test/fixtures/taiga)
 .github/scripts/release.mjs       release helpers (manifest bump, changelog), tested in test/
 ```
 
@@ -55,10 +61,8 @@ test/                             node --test, against the SDK's fake Gladys (in
 - **Every feature carries `name`, `min`, `max`, `read_only` and
   `has_feedback`**, even where they mean nothing: Gladys stores them NOT NULL.
   `min`/`max` are `0`/`1` for a binary feature, the real range for a numeric
-  one, `0`/`0` for a feature without a range (text, image...). A missing one
-  can pass the publication on a core that does not check it, then fail when
-  the user clicks "Add" (HTTP 422 `t_device_feature.min cannot be null`). The
-  SDK's fake Gladys refuses it on publication, and `test/devices.test.js`
+  one, `0`/`0` for a feature without a range (text, image...). The SDK's fake
+  Gladys refuses a missing one on publication, and `test/gladys-rules.test.js`
   checks them.
 - **The container rootfs is read-only.** Write only under `/data`, the one
   writable volume. Never log tokens, passwords or API keys.
@@ -78,8 +82,9 @@ test/                             node --test, against the SDK's fake Gladys (in
   `type: "provider"`: 5.1.0). `test/manifest.test.js` ties the manifest to the
   code (defaults, action, scene and widget handlers): change both sides
   together.
-- **User-facing text** is bilingual (English and French): action messages,
-  manifest texts, and `docs/en.md` / `docs/fr.md`, kept in sync.
+- **User-facing text** exists in English, French, German and Spanish: action
+  messages, widget content, feature names, manifest texts, and
+  `docs/{en,fr,de,es}.md`, kept in sync (`test/i18n.test.js`).
 - **Style.** Prettier formats, ESLint catches mistakes. Comments explain why,
   in English. Tests never touch the network.
 
@@ -222,6 +227,36 @@ code de ce dépôt. Compléter ce fichier quand un nouveau piège est découvert
 - Les filtres de scène ne font qu'égalité et appartenance : un seuil reste le travail d'un capteur.
 - **Les clés de widgets, de déclencheurs et d'actions sont figées une fois publiées.**
 - `gladys_version` `>=5.1.0` dès qu'il y a widgets, déclencheurs ou actions de scène.
+
+## Taiga (propre à ce dépôt)
+
+- **API** vérifiée sur `taigaio/taiga-back` (image `latest` du 22/11/2026) + `postgres:16-alpine` + `rabbitmq:4`
+  en Docker le 22/11/2026, sans le front. Le back exige deux RabbitMQ nommés `taiga-events-rabbitmq` et
+  `taiga-async-rabbitmq` (un seul conteneur avec les deux alias réseau suffit, vhost `taiga`) ; migrations ~3 min,
+  ~300 Mo. `PUBLIC_REGISTER_ENABLED=True` ouvre `POST /api/v1/auth/register` (`type: "public"`), pratique pour
+  les tests.
+- **Authentification** : `POST /api/v1/auth` `{ type: "normal", username, password }`, le champ `username`
+  accepte aussi l'e-mail → `{ id, auth_token, refresh, … }`. Jeton d'accès JWT (24 h par défaut), **jeton de
+  rafraîchissement à usage unique** (`POST /auth/refresh` → nouveau couple ; réutilisé : 401
+  `token_not_valid`). Mauvais mot de passe : 401 `invalid_credentials` ; jeton expiré ou invalide : 401
+  `token_not_valid`. Un compte GitHub/GitLab/LDAP ne passe pas par cette route.
+- **Pagination** : 30 par page par défaut ; l'en-tête `x-disable-pagination: True` renvoie tout.
+- Filtres : `status__is_closed=false` (user stories, tâches, tickets), `closed=false` (sprints). Un projet inconnu
+  dans un filtre : `[]` en 200. `GET /projects?member=<id>` répond aussi **sans** authentification (projets
+  publics) : ne pas s'en servir pour tester la connexion.
+- `due_date` est un **jour** (`YYYY-MM-DD`) : « en retard » = jour terminé dans le fuseau de Gladys, statut non
+  fermé. `due_date_status` du serveur (fuseau du serveur) n'est pas utilisé.
+- **Sprint** (`/milestones`) : `total_points`/`closed_points` valent `null` sans points ; repli sur la part de
+  `user_stories[].is_closed`. Sprint en cours = ouvert, début atteint, le plus récent.
+- Création : `POST /issues` ou `/userstories` `{ project, subject, description }` → 201 avec `id` et `ref` ;
+  sujet absent : 400 `{ subject: [...] }`. Une user story se crée même module Scrum désactivé (Kanban).
+- Les `id` des tickets ne font que croître : « nouveau ticket » = id au-delà du plus grand déjà vu dans le projet
+  (`/data/taiga-state.json`) **et** `created_date` de moins d'une heure (15 min de décalage d'horloge toléré ; pas « depuis la lecture
+  précédente », qui perdait un événement refusé plusieurs fois par Gladys) : sans ce second filtre, un ticket fermé puis rouvert, ou le module Tickets réactivé,
+  envoyait une rafale de faux « nouveaux tickets » (relecture du 22/11). La base n'est gardée que pour les projets
+  suivis dont les tickets sont lus.
+- Mot de passe refusé : nouvel essai au plus toutes les 15 min (pas 30 s), pour ne pas bloquer le compte.
+- taiga.io : web `tree.taiga.io`, API `api.taiga.io/api/v1` (gérés par `parseServerUrl`) ; non testé.
 
 ## Store
 
