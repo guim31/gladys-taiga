@@ -10,6 +10,8 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-11-22
+
 ### Added
 
 - Taiga projects in Gladys (self-hosted, or taiga.io with the same API): a
@@ -24,3 +26,6 @@ the notes of the version's GitHub Release.
   issues, sprints in progress, late items.
 - Feature names, messages and documentation in English, French, German and
   Spanish.
+
+[Unreleased]: https://github.com/guim31/gladys-taiga/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/guim31/gladys-taiga/releases/tag/v1.0.0
